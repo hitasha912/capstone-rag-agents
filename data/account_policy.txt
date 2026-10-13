@@ -1,0 +1,5 @@
+Account Policy
+
+Customers can reset their password using the Forgot Password option.
+The password reset link is sent to the registered email address.
+If a customer cannot access their registered email address, they should contact customer support for account recovery assistance.
