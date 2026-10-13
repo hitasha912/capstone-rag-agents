@@ -33,11 +33,7 @@ Open FastAPI Swagger at `http://localhost:8000/docs`.
 In another terminal:
 
 ```bash
-streamlit run ui/app.py
-```
+streamlit run ui/app.py```
 
 The local Qwen model is loaded on first query. A GPU is recommended.
 
-## Docker
-
-Docker is intentionally not included in this project.
