@@ -2,7 +2,6 @@
 
 import re
 from pathlib import Path
-from typing import List
 
 import numpy as np
 from langchain_community.vectorstores import FAISS
@@ -17,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 
 
-def load_documents(data_dir: Path = DATA_DIR) -> List[Document]:
+def load_documents(data_dir: Path = DATA_DIR) -> list[Document]:
     documents = []
     for path in sorted(data_dir.glob("*.txt")):
         text = path.read_text(encoding="utf-8")
@@ -26,7 +25,7 @@ def load_documents(data_dir: Path = DATA_DIR) -> List[Document]:
     return documents
 
 
-def chunk_documents(documents: List[Document]) -> List[Document]:
+def chunk_documents(documents: list[Document]) -> list[Document]:
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
