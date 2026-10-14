@@ -2,7 +2,7 @@
 
 import json
 import re
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, TypedDict
 
 from langchain_core.tools import tool
 
@@ -17,18 +17,18 @@ class AgentState(TypedDict, total=False):
     category: str
     urgency: str
     retrieved_context: str
-    sources: List[str]
+    sources: list[str]
     sentiment: str
     answer: str
     confidence: float
     validation_passed: bool
     validation_reason: str
     retry_count: int
-    agents_invoked: List[str]
-    feedback: Optional[Dict[str, Any]]
+    agents_invoked: list[str]
+    feedback: dict[str, Any] | None
 
 
-def _json_from(text: str) -> Dict[str, Any]:
+def _json_from(text: str) -> dict[str, Any]:
     match = re.search(r"\{.*?\}", text, re.DOTALL)
     if not match:
         return {}
