@@ -1,4 +1,4 @@
-"""Agents used by the LangGraph customer-support workflow."""
+"""Agents and reusable tools for the LangGraph customer-support workflow."""
 
 import json
 import re
@@ -15,10 +15,10 @@ class AgentState(TypedDict, total=False):
     question: str
     intent: str
     category: str
+    urgency: str
     retrieved_context: str
     sources: List[str]
     sentiment: str
-    urgency: str
     answer: str
     confidence: float
     validation_passed: bool
@@ -34,8 +34,16 @@ def _json_from(text: str) -> Dict[str, Any]:
         return {}
     try:
         return json.loads(match.group(0))
-    except Exception:
+    except json.JSONDecodeError:
         return {}
+
+
+def planner_agent(state: AgentState):
+    """Create a small explicit execution plan before specialist agents run."""
+    return {
+        "intent": "customer support request",
+        "agents_invoked": state.get("agents_invoked", []) + ["planner"],
+    }
 
 
 def query_understanding_agent(state: AgentState):
@@ -48,7 +56,7 @@ Question: {state['question']}""",
     )
     data = _json_from(raw)
     return {
-        "intent": data.get("intent", "customer support request"),
+        "intent": data.get("intent", state.get("intent", "customer support request")),
         "category": data.get("category", "other"),
         "urgency": data.get("urgency", "medium"),
         "agents_invoked": state.get("agents_invoked", []) + ["query_understanding"],
