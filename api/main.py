@@ -1,7 +1,5 @@
 """FastAPI service for the customer-support Agentic RAG system."""
 
-from typing import Optional
-
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
@@ -19,11 +17,11 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     answer: str
     sources: list[str] = Field(default_factory=list)
-    category: Optional[str] = None
-    sentiment: Optional[str] = None
-    urgency: Optional[str] = None
+    category: str | None = None
+    sentiment: str | None = None
+    urgency: str | None = None
     validation_passed: bool = False
-    validation_reason: Optional[str] = None
+    validation_reason: str | None = None
     agents_invoked: list[str] = Field(default_factory=list)
 
 
