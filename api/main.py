@@ -3,15 +3,20 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-from src.graph import run_agentic_rag
-from src.memory import record_feedback
+from src.memory import record_feedback, run_with_memory
 
-app = FastAPI(title="Multi-Agent RAG Customer Support API", version="1.0.0")
+app = FastAPI(
+    title="Multi-Agent RAG Customer Support API",
+    version="1.0.0",
+    description="Enterprise customer-support automation using LangGraph, hybrid RAG, memory, validation, and feedback.",
+)
 
 
 class QueryRequest(BaseModel):
-    question: str = Field(min_length=1)
-    session_id: str = Field(default="api_session", min_length=1)
+    question: str = Field(min_length=1, description="Customer support question")
+    session_id: str = Field(
+        default="api_session", min_length=1, description="Conversation session identifier"
+    )
 
 
 class QueryResponse(BaseModel):
@@ -26,23 +31,23 @@ class QueryResponse(BaseModel):
 
 
 class FeedbackRequest(BaseModel):
-    session_id: str
-    question: str
-    answer: str
+    session_id: str = Field(min_length=1)
+    question: str = Field(min_length=1)
+    answer: str = Field(min_length=1)
     rating: int = Field(ge=1, le=5)
     comment: str = ""
 
 
-@app.get("/health")
+@app.get("/health", tags=["system"])
 def health():
     """Return a lightweight service health response."""
     return {"status": "healthy"}
 
 
-@app.post("/query", response_model=QueryResponse)
+@app.post("/query", response_model=QueryResponse, tags=["customer-support"])
 def query(request: QueryRequest):
-    """Run the complete Agentic RAG workflow for a customer question."""
-    result = run_agentic_rag(request.question, request.session_id)
+    """Run Agentic RAG with session-aware conversation memory."""
+    result = run_with_memory(request.session_id, request.question)
     return QueryResponse(
         answer=result["answer"],
         sources=result.get("sources", []),
@@ -55,7 +60,7 @@ def query(request: QueryRequest):
     )
 
 
-@app.post("/feedback")
+@app.post("/feedback", tags=["customer-support"])
 def feedback(request: FeedbackRequest):
     """Record explicit user feedback for a generated answer."""
     return record_feedback(**request.model_dump())
