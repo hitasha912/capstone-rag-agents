@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: capstone-rag-agents
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: MODEL_NAME
+        value: Qwen/Qwen2.5-1.5B-Instruct
+      - key: EMBEDDING_MODEL
+        value: sentence-transformers/all-MiniLM-L6-v2
