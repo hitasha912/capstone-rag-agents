@@ -64,27 +64,25 @@ Question: {state['question']}""",
 
 
 def retrieval_agent(state: AgentState):
-    retry_count = state.get("retry_count", 0)
-    docs = hybrid_search(state["question"], k=4 if retry_count == 0 else 6)
+    """Retrieve grounded context by explicitly invoking the reusable RAG tool."""
+    context = rag_search.invoke({"question": state["question"]})
+    source_matches = re.findall(r"Source:\s*([^\n]+)", context)
     return {
-        "retrieved_context": build_context(docs),
-        "sources": list(dict.fromkeys(doc.metadata["source"] for doc in docs)),
-        "retry_count": retry_count + 1,
-        "agents_invoked": state.get("agents_invoked", []) + ["retrieval"],
+        "retrieved_context": context,
+        "sources": list(dict.fromkeys(source_matches)),
+        "retry_count": state.get("retry_count", 0) + 1,
+        "agents_invoked": state.get("agents_invoked", []) + ["retrieval", "rag_search_tool"],
     }
 
 
 def sentiment_agent(state: AgentState):
-    raw = local_llm(
-        f"""Classify this customer message. Return ONLY JSON: {{"sentiment":"positive|neutral|negative","urgency":"low|medium|high"}}
-Customer message: {state['question']}""",
-        max_new_tokens=100,
-    )
+    """Analyze sentiment by explicitly invoking the reusable sentiment tool."""
+    raw = sentiment_analysis_tool.invoke({"question": state["question"]})
     data = _json_from(raw)
     return {
         "sentiment": data.get("sentiment", "neutral"),
         "urgency": data.get("urgency", state.get("urgency", "medium")),
-        "agents_invoked": state.get("agents_invoked", []) + ["sentiment"],
+        "agents_invoked": state.get("agents_invoked", []) + ["sentiment", "sentiment_analysis_tool"],
     }
 
 
