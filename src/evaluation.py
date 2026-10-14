@@ -7,6 +7,7 @@ from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
 from rouge_score import rouge_scorer
 from sklearn.metrics.pairwise import cosine_similarity
 
+from .config import OFFLINE_MODE
 from .rag import get_components
 
 
@@ -32,9 +33,19 @@ def evaluate_answer(reference: str, prediction: str):
 
 
 def retrieval_relevance(query: str, docs):
-    _, _, embeddings, _, _, _ = get_components()
     if not docs:
         return 0.0
+
+    # Offline VS Code mode uses lexical relevance and needs no embedding download.
+    if OFFLINE_MODE:
+        query_terms = set(tokenize(query))
+        scores = []
+        for doc in docs:
+            doc_terms = set(tokenize(doc.page_content))
+            scores.append(len(query_terms & doc_terms) / max(len(query_terms), 1))
+        return float(np.mean(scores))
+
+    _, _, embeddings, _, _, _ = get_components()
     query_vector = embeddings.embed_query(query)
     doc_vectors = [embeddings.embed_query(doc.page_content) for doc in docs]
     return float(np.mean(cosine_similarity([query_vector], doc_vectors)[0]))
