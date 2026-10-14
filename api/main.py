@@ -18,13 +18,13 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     answer: str
-    sources: list[str] = []
+    sources: list[str] = Field(default_factory=list)
     category: Optional[str] = None
     sentiment: Optional[str] = None
     urgency: Optional[str] = None
     validation_passed: bool = False
     validation_reason: Optional[str] = None
-    agents_invoked: list[str] = []
+    agents_invoked: list[str] = Field(default_factory=list)
 
 
 class FeedbackRequest(BaseModel):
@@ -37,11 +37,13 @@ class FeedbackRequest(BaseModel):
 
 @app.get("/health")
 def health():
+    """Return a lightweight service health response."""
     return {"status": "healthy"}
 
 
 @app.post("/query", response_model=QueryResponse)
 def query(request: QueryRequest):
+    """Run the complete Agentic RAG workflow for a customer question."""
     result = run_agentic_rag(request.question, request.session_id)
     return QueryResponse(
         answer=result["answer"],
@@ -57,4 +59,5 @@ def query(request: QueryRequest):
 
 @app.post("/feedback")
 def feedback(request: FeedbackRequest):
+    """Record explicit user feedback for a generated answer."""
     return record_feedback(**request.model_dump())
