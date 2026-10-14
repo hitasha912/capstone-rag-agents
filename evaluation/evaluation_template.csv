@@ -1,0 +1,6 @@
+question,reference,prediction,BLEU,ROUGE-1,ROUGE-2,ROUGE-L,retrieval_relevance,system
+How long does a refund take?,Refunds are processed within 5-7 business days after the returned product is inspected and approved.,,,,,,,
+How long does standard shipping take?,Standard shipping usually takes 5-7 business days.,,,,,,,
+Can I cancel an order after it has shipped?,No. Orders cannot be cancelled once they have been shipped.,,,,,,,
+What payment methods are accepted?,Credit cards, debit cards, UPI and net banking are accepted.,,,,,,,
+How can I reset my password?,Customers can reset their password using the Forgot Password option.,,,,,,,
