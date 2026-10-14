@@ -7,7 +7,7 @@ from nltk.translate.bleu_score import SmoothingFunction, sentence_bleu
 from rouge_score import rouge_scorer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from .rag import get_components, hybrid_search
+from .rag import get_components
 
 
 def tokenize(text):
@@ -15,9 +15,13 @@ def tokenize(text):
 
 
 def evaluate_answer(reference: str, prediction: str):
-    rouge = rouge_scorer.RougeScorer(["rouge1", "rouge2", "rougeL"], use_stemmer=True)
+    rouge = rouge_scorer.RougeScorer(
+        ["rouge1", "rouge2", "rougeL"], use_stemmer=True
+    )
     smooth = SmoothingFunction().method1
-    bleu = sentence_bleu([tokenize(reference)], tokenize(prediction), smoothing_function=smooth)
+    bleu = sentence_bleu(
+        [tokenize(reference)], tokenize(prediction), smoothing_function=smooth
+    )
     scores = rouge.score(reference, prediction)
     return {
         "BLEU": bleu,
@@ -37,9 +41,24 @@ def retrieval_relevance(query: str, docs):
 
 
 EVALUATION_DATA = [
-    {"question": "How long does a refund take?", "reference": "Refunds are processed within 5-7 business days after the returned product is inspected and approved."},
-    {"question": "How long does standard shipping take?", "reference": "Standard shipping usually takes 5-7 business days."},
-    {"question": "Can I cancel an order after it has shipped?", "reference": "No. Orders cannot be cancelled once they have been shipped."},
-    {"question": "What payment methods are accepted?", "reference": "Credit cards, debit cards, UPI and net banking are accepted."},
-    {"question": "How can I reset my password?", "reference": "Customers can reset their password using the Forgot Password option."},
+    {
+        "question": "How long does a refund take?",
+        "reference": "Refunds are processed within 5-7 business days after the returned product is inspected and approved.",
+    },
+    {
+        "question": "How long does standard shipping take?",
+        "reference": "Standard shipping usually takes 5-7 business days.",
+    },
+    {
+        "question": "Can I cancel an order after it has shipped?",
+        "reference": "No. Orders cannot be cancelled once they have been shipped.",
+    },
+    {
+        "question": "What payment methods are accepted?",
+        "reference": "Credit cards, debit cards, UPI and net banking are accepted.",
+    },
+    {
+        "question": "How can I reset my password?",
+        "reference": "Customers can reset their password using the Forgot Password option.",
+    },
 ]
