@@ -1,16 +1,14 @@
-"""Knowledge-base ingestion, embeddings, FAISS and hybrid retrieval."""
+"""Knowledge-base ingestion, FAISS and hybrid retrieval."""
 
 import re
 from pathlib import Path
 
 import numpy as np
-from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from rank_bm25 import BM25Okapi
 
-from .config import CHUNK_OVERLAP, CHUNK_SIZE, EMBEDDING_MODEL, TOP_K
+from .config import CHUNK_OVERLAP, CHUNK_SIZE, EMBEDDING_MODEL, OFFLINE_MODE, TOP_K
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
@@ -40,12 +38,21 @@ def tokenize(text: str):
 def build_retrieval_components():
     documents = load_documents()
     chunks = chunk_documents(documents)
+    bm25 = BM25Okapi([tokenize(doc.page_content) for doc in chunks])
+
+    # Full mode keeps the assignment's FAISS + semantic retrieval path.
+    # Offline mode avoids all Hugging Face downloads and uses BM25 locally.
+    if OFFLINE_MODE:
+        return documents, chunks, None, None, None, bm25
+
+    from langchain_community.vectorstores import FAISS
+    from langchain_huggingface import HuggingFaceEmbeddings
+
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
     vectorstore = FAISS.from_documents(chunks, embeddings)
     retriever = vectorstore.as_retriever(
         search_type="similarity", search_kwargs={"k": TOP_K}
     )
-    bm25 = BM25Okapi([tokenize(doc.page_content) for doc in chunks])
     return documents, chunks, embeddings, vectorstore, retriever, bm25
 
 
@@ -68,9 +75,11 @@ def bm25_search(query: str, k: int = TOP_K):
 
 def hybrid_search(query: str, k: int = TOP_K):
     _, _, _, _, retriever, _ = get_components()
+    if OFFLINE_MODE:
+        return bm25_search(query, k=k)
+
     semantic_docs = retriever.invoke(query)
     keyword_docs = bm25_search(query, k=k)
-
     combined = []
     seen = set()
     for doc in semantic_docs + keyword_docs:
